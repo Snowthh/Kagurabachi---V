@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kagurabachi - V (Local Version)</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: black; color: white; overflow: hidden; }
+        
+        .background {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url("https://static0.srcdn.com/wordpress/wp-content/uploads/2024/12/kagurabachi-chapter-59-color-page.jpg?q=49&fit=contain&w=750&h=422&dpr=2");
+            background-size: cover; background-position: center; opacity: 0.15; z-index: -1; filter: blur(3px);
+        }
+
+        /* LOGIN */
+        #auth-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); display: flex; align-items: center; justify-content: center; z-index: 5000;
+        }
+        .login-box {
+            background: #111; padding: 40px; border: 2px solid red; border-radius: 15px;
+            width: 350px; text-align: center; box-shadow: 0 0 20px red;
+        }
+        .login-box input { width: 100%; padding: 12px; margin: 10px 0; background: #222; border: 1px solid #444; color: white; border-radius: 5px; outline: none; }
+        .login-box button { width: 100%; padding: 12px; background: red; border: none; color: white; font-weight: bold; cursor: pointer; border-radius: 5px; }
+
+        /* INTERFACE */
+        #main-content { display: none; width: 100%; height: 100vh; }
+        .topbar { position: fixed; top: 0; width: 100%; height: 70px; background: rgba(0,0,0,0.8); border-bottom: 2px solid red; display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .topbar h1 { color: #ff2e2e; letter-spacing: 4px; text-shadow: 0 0 15px red; }
+
+        .menu { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); display: flex; flex-direction: column; gap: 12px; width: 350px; }
+        .menu button { height: 55px; border-radius: 12px; background: rgba(15,15,15,0.9); color: white; font-size: 16px; cursor: pointer; border: 2px solid #333; transition: 0.3s; font-weight: bold; }
+        .menu button:hover { border-color: red; box-shadow: 0 0 15px red; transform: scale(1.05); }
+
+        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; overflow-y: auto; background: rgba(0,0,0,0.9); padding: 100px 20px 20px 20px; }
+        .back-btn { position: fixed; top: 85px; left: 20px; padding: 8px 15px; background: #111; border: 1px solid red; color: white; cursor: pointer; border-radius: 8px; z-index: 2000; }
+
+        /* FICHA E VIDA */
+        .status-container { max-width: 500px; margin: 0 auto; background: #0a0a0a; padding: 25px; border: 2px solid red; border-radius: 20px; }
+        .pv-container { background: #111; padding: 15px; border-radius: 10px; border: 1px solid #444; margin-bottom: 20px; text-align: center; }
+        .pv-controls { display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: 10px; }
+        .pv-input { width: 60px; background: transparent; border: none; border-bottom: 2px solid red; color: white; font-size: 24px; text-align: center; outline: none; }
+        .stat-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; }
+        .btn-mod { width: 30px; height: 30px; background: #222; border: 1px solid red; color: white; cursor: pointer; border-radius: 5px; }
+
+        /* CARDS */
+        .big-card-grid { display: flex; justify-content: center; gap: 30px; margin-top: 50px; flex-wrap: wrap; }
+        .big-card { width: 260px; height: 380px; border: 2px solid #333; border-radius: 20px; overflow: hidden; position: relative; cursor: pointer; transition: 0.4s; }
+        .big-card img { width: 100%; height: 100%; object-fit: cover; opacity: 0.6; }
+        .big-card h2 { position: absolute; bottom: 15px; width: 100%; text-align: center; background: rgba(0,0,0,0.6); padding: 5px 0; }
+        .big-card:hover { border-color: red; transform: translateY(-10px); box-shadow: 0 0 20px red; }
+        .blue-hover:hover { border-color: cyan; box-shadow: 0 0 20px cyan; }
+
+        /* SKILLS */
+        .tree-container { width: 100%; height: 70vh; position: relative; }
+        .skill { 
+            width: 80px; height: 80px; border-radius: 50%; border: 3px solid #444; 
+            position: absolute; cursor: pointer; background: #111; transition: 0.3s;
+            display: flex; align-items: center; justify-content: center; overflow: hidden;
+        }
+        .skill img { width: 100%; height: 100%; object-fit: cover; }
+        .skill.bought { border-color: cyan; box-shadow: 0 0 15px cyan; }
+        .skill.red-bought { border-color: red; box-shadow: 0 0 15px red; }
+
+        #skill-desc {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 500px; background: rgba(10,10,10,0.98); border: 2px solid red; 
+            padding: 20px; border-radius: 15px; text-align: center; display: none; z-index: 6000;
+        }
+
+        .logout-btn { position: fixed; bottom: 20px; right: 20px; padding: 8px 15px; background: #222; border: 1px solid red; color: white; cursor: pointer; border-radius: 5px; }
+    </style>
+</head>
+<body>
+
+    <div class="background"></div>
+
+    <div id="auth-screen">
+        <div class="login-box">
+            <h2 style="color: red; margin-bottom: 20px;">KAGURABACHI V</h2>
+            <p style="font-size: 12px; margin-bottom: 10px; color: #888;">Digite seu nome para entrar</p>
+            <input type="text" id="username" placeholder="Nome do Personagem">
+            <button id="btn-entrar">ENTRAR NO SISTEMA</button>
+        </div>
+    </div>
+
+    <div id="main-content">
+        <div class="topbar"><h1>KAGURABACHI - V</h1></div>
+
+        <div class="menu" id="main-menu">
+            <button onclick="showScreen('ficha-screen')">Minha Ficha</button>
+            <button onclick="showScreen('skill-screen')">Skill Tree Geral</button>
+            <button onclick="showScreen('espadas-screen')">Espadas Mágicas</button>
+            <button onclick="showScreen('feiticos-screen')">Feitiços</button>
+        </div>
+
+        <div class="screen" id="ficha-screen">
+            <button class="back-btn" onclick="goHome()">Voltar</button>
+            <div class="status-container">
+                <h2 id="char-name" style="text-align: center; color: red; margin-bottom: 10px;">JOGADOR</h2>
+                
+                <div class="pv-container">
+                    <p style="font-size: 14px; color: #aaa;">VIDA ATUAL</p>
+                    <div class="pv-controls">
+                        <button class="btn-mod" onclick="modificarVida(-10)">-10</button>
+                        <input type="number" id="pv-field" class="pv-input" onchange="salvarVida()">
+                        <button class="btn-mod" onclick="modificarVida(10)">+10</button>
+                    </div>
+                </div>
+
+                <p style="text-align: center;">Pontos: <span class="pts-sync" style="color: red;">0</span></p>
+                <div id="stats-list" style="margin-top: 15px;"></div>
+            </div>
+        </div>
+
+        <div class="screen" id="skill-screen">
+            <button class="back-btn" onclick="goHome()">Voltar</button>
+            <h2 style="text-align: center; color: red;">SKILL TREE GERAL</h2>
+            <div class="tree-container">
+                <div class="skill" id="gen-1" style="left: 10%; top: 40%;" onclick="selectSkill('Iai Purity White Style', 'Primeiros Movimentos do Estilo. +1 AGL.', 3, 'gen-1')"><img src="https://i.imgur.com/DPSpBF8.jpeg"></div>
+                <div class="skill" id="gen-2" style="left: 30%; top: 40%;" onclick="selectSkill('Postura Iai', 'O usuário entra na postura do Iai.', 4, 'gen-2')"><img src="https://i.imgur.com/tPeuJ5K.jpeg"></div>
+                <div class="skill" id="gen-3" style="left: 50%; top: 40%;" onclick="selectSkill('Marca da Pureza', 'Adiciona Marcas ao inimigo.', 4, 'gen-3')"><img src="https://i.imgur.com/t3GZ8aN.jpeg"></div>
+                <div class="skill" id="gen-4" style="left: 70%; top: 40%;" onclick="selectSkill('Passo Nevado.', 'O Usuário some por um momento no campo de batalha.', 3, 'gen-4')"><img src="https://i.imgur.com/t3GZ8aN.jpeg"></div>
+                <div class="skill" id="gen-5" style="left: 90%; top: 40%;" onclick="selectSkill('Pureza Branca', 'Sua espada é sacada perfeitamente.', 4, 'gen-5')"><img src="https://i.imgur.com/DPSpBF8.jpeg"></div>
+            </div>
+        </div>
+
+        <div class="screen" id="espadas-screen">
+            <button class="back-btn" onclick="goHome()">Voltar</button>
+            <div class="big-card-grid">
+                <div class="big-card" onclick="showScreen('tobimune-tree')">
+                    <img src="https://preview.redd.it/tobimune-doesnt-suit-samura-at-all-v0-zitrdoek0lpe1.jpeg?auto=webp&s=67d95018b69d850799eb809780a41b98059f7b81">
+                    <h2>TOBIMUNE</h2>
+                </div>
+                <div class="big-card" onclick="showScreen('kuregumo-tree')">
+                    <img src="https://preview.redd.it/is-it-possible-for-kuregumo-to-come-back-no-really-hear-me-v0-cmq5tj0ffeye1.jpeg?auto=webp&s=aac22a4a34b70f9cb87cb41c9b7ee0342777561c">
+                    <h2>KUREGUMO</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="screen" id="tobimune-tree">
+            <button class="back-btn" onclick="showScreen('espadas-screen')">Voltar</button>
+            <h2 style="text-align: center; color: red;">TOBIMUNE</h2>
+            <div class="tree-container">
+                <div class="skill" id="tobi-1" style="left: 25%; top: 40%;" onclick="selectSkill('Crow', 'PASSIVA: Teleporte entre rastros de penas.', 0, 'tobi-1')"><img src="https://cdn.discordapp.com/attachments/1505688139505729567/1506771547350765638/image.png"></div>
+                <div class="skill" id="tobi-2" style="left: 50%; top: 40%;" onclick="selectSkill('Owl', 'Invoca olhos que detectam Genryoku.', 4, 'tobi-2')"><img src="https://static.wikia.nocookie.net/kagurabachi/images/e/e6/Samura_Owl.png"></div>
+                <div class="skill" id="tobi-3" style="left: 75%; top: 40%;" onclick="selectSkill('Suzaku', 'Fogo pela lâmina que cura e ataca.', 8, 'tobi-3')"><img src="https://cdn.discordapp.com/attachments/1505688139505729567/1506771886758035557/image.png"></div>
+            </div>
+        </div>
+
+        <div class="screen" id="kuregumo-tree">
+            <button class="back-btn" onclick="showScreen('espadas-screen')">Voltar</button>
+            <h2 style="text-align: center; color: red;">KUREGUMO</h2>
+            <div class="tree-container">
+                <div class="skill" id="kure-1" style="left: 20%; top: 40%;" onclick="selectSkill('Yui', 'Cria névoa eletrizante.', 5, 'kure-1')"><img src="https://i.imgur.com/t3GZ8aN.jpeg"></div>
+                <div class="skill" id="kure-2" style="left: 50%; top: 40%;" onclick="selectSkill('Kou', 'Disparo de relâmpago.', 7, 'kure-2')"><img src="https://i.imgur.com/t3GZ8aN.jpeg"></div>
+                <div class="skill" id="kure-3" style="left: 80%; top: 40%;" onclick="selectSkill('Mei', 'Explosão de Genryoku.', 10, 'kure-3')"><img src="https://i.imgur.com/t3GZ8aN.jpeg"></div>
+            </div>
+        </div>
+
+        <div class="screen" id="feiticos-screen">
+            <button class="back-btn" onclick="goHome()">Voltar</button>
+            <h2 style="text-align: center; color: cyan;">FEITIÇOS</h2>
+            <div class="big-card-grid">
+                <div class="big-card blue-hover" onclick="showScreen('espaco-tree')">
+                    <img src="https://i.pinimg.com/736x/88/5b/76/885b7677d2427f7f71665e7144e37517.jpg">
+                    <h2>ESPAÇO</h2>
+                </div>
+                <div class="big-card blue-hover" onclick="showScreen('gelo-tree')">
+                    <img src="https://i.pinimg.com/736x/44/14/c1/4414c1d763a8e7e17281f087d3a04291.jpg">
+                    <h2>GELO</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="screen" id="espaco-tree">
+            <button class="back-btn" onclick="showScreen('feiticos-screen')">Voltar</button>
+            <h2 style="text-align: center; color: cyan;">MANIPULAÇÃO DE ESPAÇO</h2>
+            <div class="tree-container">
+                <div class="skill" id="spc-1" style="left: 20%; top: 20%;" onclick="selectSkill('Teleporte', 'Salto espacial.', 5, 'spc-1')"><img src="https://i.imgur.com/tPeuJ5K.jpeg"></div>
+                <div class="skill" id="spc-2" style="left: 50%; top: 20%;" onclick="selectSkill('Dobra', 'Distorsão defensiva.', 7, 'spc-2')"><img src="https://i.imgur.com/tPeuJ5K.jpeg"></div>
+                <div class="skill" id="spc-3" style="left: 80%; top: 20%;" onclick="selectSkill('Repulsão', 'Pressão de vácuo.', 8, 'spc-3')"><img src="https://i.imgur.com/tPeuJ5K.jpeg"></div>
+                <div class="skill" id="spc-4" style="left: 35%; top: 60%;" onclick="selectSkill('Flutuar', 'Gravidade alterada.', 10, 'spc-4')"><img src="https://i.imgur.com/tPeuJ5K.jpeg"></div>
+                <div class="skill" id="spc-5" style="left: 65%; top: 60%;" onclick="selectSkill('Singularidade', 'Buraco negro.', 15, 'spc-5')"><img src="https://i.imgur.com/tPeuJ5K.jpeg"></div>
+            </div>
+        </div>
+
+        <div class="screen" id="gelo-tree">
+            <button class="back-btn" onclick="showScreen('feiticos-screen')">Voltar</button>
+            <h2 style="text-align: center; color: cyan;">MANIPULAÇÃO DE GELO</h2>
+            <div class="tree-container">
+                <div class="skill" id="ice-1" style="left: 20%; top: 20%;" onclick="selectSkill('Estaca', 'Lanças de gelo.', 4, 'ice-1')"><img src="https://i.imgur.com/DPSpBF8.jpeg"></div>
+                <div class="skill" id="ice-2" style="left: 50%; top: 20%;" onclick="selectSkill('Escudo', 'Parede de cristal.', 6, 'ice-2')"><img src="https://i.imgur.com/DPSpBF8.jpeg"></div>
+                <div class="skill" id="ice-3" style="left: 80%; top: 20%;" onclick="selectSkill('Nevasca', 'Área de congelamento.', 8, 'ice-3')"><img src="https://i.imgur.com/DPSpBF8.jpeg"></div>
+                <div class="skill" id="ice-4" style="left: 35%; top: 60%;" onclick="selectSkill('Prisão', 'Imobilizar alvos.', 9, 'ice-4')"><img src="https://i.imgur.com/DPSpBF8.jpeg"></div>
+                <div class="skill" id="ice-5" style="left: 65%; top: 60%;" onclick="selectSkill('Zero Absoluto', 'Destruição gélida.', 14, 'ice-5')"><img src="https://i.imgur.com/DPSpBF8.jpeg"></div>
+            </div>
+        </div>
+
+        <div id="skill-desc">
+            <h3 id="skill-name" style="color: red;">Skill</h3>
+            <p id="skill-text" style="margin: 10px 0;"></p>
+            <p>Custo: <span id="skill-cost" style="color: red;">0</span> pts</p>
+            <button id="btn-buy" style="background: red; border: none; padding: 10px; cursor: pointer; color: white; margin-top: 10px;">DESBLOQUEAR</button>
+            <button onclick="closeDesc()" style="background: #333; border: none; padding: 10px; cursor: pointer; color: white; margin-top: 10px; margin-left: 10px;">SAIR</button>
+        </div>
+
+        <button class="logout-btn" onclick="logout()">Sair</button>
+    </div>
+
+    <script>
+        // LOGICA DE ARMAZENAMENTO LOCAL (Substitui Firebase)
+        let userFicha = null;
+        let selectedSkillData = null;
+
+        document.getElementById('btn-entrar').onclick = () => {
+            const name = document.getElementById('username').value.trim();
+            if(!name) return alert("Digite um nome!");
+            
+            // Tenta carregar do LocalStorage
+            const saved = localStorage.getItem('ficha_' + name);
+            if(saved) {
+                userFicha = JSON.parse(saved);
+            } else {
+                // Cria nova ficha
+                userFicha = { 
+                    nome: name, 
+                    pontos: 20, 
+                    vida: 100, 
+                    stats: { Força:0, Destreza:0, Intelecto:0, Genryoku:0 }, 
+                    skillsCompradas: [] 
+                };
+                salvarNoDisco();
+            }
+            
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('main-content').style.display = 'block';
+            renderStats();
+            marcarCompradas();
+        };
+
+        function salvarNoDisco() {
+            if(userFicha) {
+                localStorage.setItem('ficha_' + userFicha.nome, JSON.stringify(userFicha));
+            }
+        }
+
+        function renderStats() {
+            document.querySelectorAll('.pts-sync').forEach(el => el.innerText = userFicha.pontos);
+            document.getElementById('char-name').innerText = userFicha.nome.toUpperCase();
+            document.getElementById('pv-field').value = userFicha.vida;
+            
+            const list = document.getElementById('stats-list');
+            list.innerHTML = "";
+            for (let s in userFicha.stats) {
+                list.innerHTML += `
+                    <div class="stat-row">
+                        <span>${s}</span>
+                        <div>
+                            <button class="btn-mod" onclick="modificarStat('${s}', -1)">-</button>
+                            <span style="margin: 0 10px;">${userFicha.stats[s]}</span>
+                            <button class="btn-mod" onclick="modificarStat('${s}', 1)">+</button>
+                        </div>
+                    </div>`;
+            }
+        }
+
+        window.modificarVida = (val) => {
+            userFicha.vida = parseInt(userFicha.vida) + val;
+            document.getElementById('pv-field').value = userFicha.vida;
+            salvarNoDisco();
+        };
+
+        window.salvarVida = () => {
+            userFicha.vida = document.getElementById('pv-field').value;
+            salvarNoDisco();
+        };
+
+        window.modificarStat = (stat, val) => {
+            if (val > 0 && userFicha.pontos > 0) { 
+                userFicha.stats[stat]++; 
+                userFicha.pontos--; 
+            } else if (val < 0 && userFicha.stats[stat] > 0) { 
+                userFicha.stats[stat]--; 
+                userFicha.pontos++; 
+            } else return;
+            
+            renderStats();
+            salvarNoDisco();
+        };
+
+        window.selectSkill = (nome, desc, custo, id) => {
+            if(userFicha.skillsCompradas.includes(id)) { alert("Já desbloqueado!"); return; }
+            selectedSkillData = { nome, custo, id };
+            document.getElementById('skill-name').innerText = nome;
+            document.getElementById('skill-text').innerText = desc;
+            document.getElementById('skill-cost').innerText = custo;
+            document.getElementById('skill-desc').style.display = 'block';
+        };
+
+        document.getElementById('btn-buy').onclick = () => {
+            if (userFicha.pontos >= selectedSkillData.custo) {
+                userFicha.pontos -= selectedSkillData.custo;
+                userFicha.skillsCompradas.push(selectedSkillData.id);
+                renderStats(); 
+                marcarCompradas(); 
+                closeDesc();
+                salvarNoDisco();
+            } else { 
+                alert("Pontos insuficientes!"); 
+            }
+        };
+
+        window.closeDesc = () => document.getElementById('skill-desc').style.display = 'none';
+
+        function marcarCompradas() {
+            // Remove classes antigas primeiro
+            document.querySelectorAll('.skill').forEach(el => {
+                el.classList.remove('bought', 'red-bought');
+            });
+
+            userFicha.skillsCompradas.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) {
+                    if(id.startsWith('spc-') || id.startsWith('ice-')) el.classList.add('bought');
+                    else el.classList.add('red-bought');
+                }
+            });
+        }
+
+        window.showScreen = (id) => {
+            document.getElementById('main-menu').style.display = 'none';
+            document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
+            document.getElementById(id).style.display = 'block';
+        };
+
+        window.goHome = () => {
+            document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
+            document.getElementById('main-menu').style.display = 'flex';
+        };
+
+        window.logout = () => {
+            location.reload(); // Recarrega a página para voltar ao login
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kagurabachi - V</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: #050505; color: white; overflow: hidden; }
+        
+        .background {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url("https://static0.srcdn.com/wordpress/wp-content/uploads/2024/12/kagurabachi-chapter-59-color-page.jpg?q=49&fit=contain&w=750&h=422&dpr=2");
+            background-size: cover; background-position: center; opacity: 0.1; z-index: -1; filter: grayscale(50%);
+        }
+
+        .lore-sidebar {
+            position: fixed; left: 30px; top: 120px; width: 250px; 
+            background: rgba(15, 15, 15, 0.9); padding: 20px; border-left: 3px solid #c5a059;
+            font-size: 13px; line-height: 1.6; color: #bbb; z-index: 500; border-radius: 0 10px 10px 0;
+        }
+        .lore-sidebar h4 { color: #c5a059; margin-bottom: 10px; letter-spacing: 1px; }
+
+        .brand-footer { position: fixed; bottom: 20px; right: 20px; text-align: right; z-index: 1000; }
+        .brand-logo { font-size: 22px; font-weight: 900; color: #c5a059; display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+        .brand-credits { font-size: 11px; color: #666; margin-top: 5px; }
+
+        .btn-click-anim:active { transform: scale(0.95); filter: brightness(1.2); transition: 0.1s; }
+
+        #main-content { display: none; width: 100%; height: 100vh; }
+        .topbar { position: fixed; top: 0; width: 100%; height: 70px; background: rgba(0,0,0,0.9); border-bottom: 2px solid #333; display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .topbar h1 { color: #eee; letter-spacing: 5px; text-shadow: 0 0 10px #c5a059; }
+
+        .menu { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); display: flex; flex-direction: column; gap: 15px; width: 400px; }
+        .menu button { height: 65px; border-radius: 8px; background: #111; color: #ddd; font-size: 18px; cursor: pointer; border: 1px solid #c5a059; transition: 0.3s; font-weight: bold; }
+        .menu button:hover { background: #c5a059; color: black; box-shadow: 0 0 20px rgba(197, 160, 89, 0.4); }
+
+        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; overflow-y: auto; background: rgba(0,0,0,0.94); padding: 100px 50px 50px 320px; }
+        .back-btn { position: fixed; top: 85px; left: 320px; padding: 10px 20px; background: #222; border: 1px solid #c5a059; color: #c5a059; cursor: pointer; border-radius: 5px; z-index: 2000; font-weight: bold; }
+
+        .status-container { max-width: 600px; background: #0d0d0d; padding: 30px; border: 1px solid #333; border-radius: 10px; }
+        .bar-outer { width: 100%; height: 18px; background: #1a1a1a; border-radius: 9px; margin: 8px 0 15px 0; border: 1px solid #333; overflow: hidden; }
+        .bar-inner { height: 100%; transition: 0.5s; width: 100%; }
+        #hp-bar { background: linear-gradient(90deg, #600, #b00); }
+        #en-bar { background: linear-gradient(90deg, #003, #007bff); }
+        
+        .stat-row { display: flex; justify-content: space-between; align-items: center; background: #151515; padding: 12px; margin-bottom: 8px; border-radius: 5px; border: 1px solid #222; }
+        .btn-mod { width: 30px; height: 30px; background: #222; border: 1px solid #c5a059; color: white; cursor: pointer; }
+
+        .tree-container { width: 100%; height: 650px; position: relative; margin-top: 20px; }
+        .skill-line { position: absolute; background: #c5a059; height: 2px; z-index: 1; opacity: 0.2; transform-origin: left center; pointer-events: none; }
+        .skill { width: 80px; height: 80px; border-radius: 50%; border: 2px solid #444; position: absolute; cursor: pointer; background: #111; z-index: 2; transition: 0.3s; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        .skill.bought { border-color: #c5a059; box-shadow: 0 0 15px #c5a059; }
+        .skill img { width: 100%; height: 100%; object-fit: cover; }
+
+        .big-card-grid { display: flex; justify-content: center; gap: 30px; margin-top: 30px; flex-wrap: wrap; }
+        .big-card { width: 260px; height: 380px; border: 1px solid #444; border-radius: 15px; overflow: hidden; position: relative; cursor: pointer; transition: 0.3s; background: #000; }
+        .big-card img { width: 100%; height: 100%; object-fit: cover; opacity: 0.4; }
+        .big-card h2 { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.8); padding: 15px; text-align: center; color: #c5a059; }
+
+        #skill-desc { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 450px; background: #111; border: 2px solid #c5a059; padding: 20px; border-radius: 10px; text-align: center; display: none; z-index: 5000; box-shadow: 0 0 30px black; }
+
+        #auth-screen { position: fixed; width: 100%; height: 100%; background: #000; display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        .login-box { border: 1px solid #c5a059; padding: 40px; border-radius: 10px; text-align: center; width: 350px; background: #0a0a0a; }
+        .login-box input { width: 100%; padding: 12px; margin: 15px 0; background: #111; border: 1px solid #333; color: white; outline: none; }
+    </style>
+</head>
+<body>
+
+    <div class="background"></div>
+
+    <div class="lore-sidebar" id="lore-box" style="display:none;">
+        <h4>O Legado das Lâminas</h4>
+        <p>Após a Grande Guerra, o Japão mergulhou em uma era onde feitiçaria e crime organizado se fundiram. O equilíbrio do mundo depende de relíquias forjadas com Genryoku.</p>
+        <br>
+        <p>O sangue é a única moeda que nunca desvaloriza no submundo.</p>
+    </div>
+
+    <div class="brand-footer">
+        <div class="brand-logo">KAGURABACHI RPG <span>⚔️</span></div>
+        <div class="brand-credits">Realização de Matheus Botari</div>
+    </div>
+
+    <div id="auth-screen">
+        <div class="login-box">
+            <h2 style="color: #c5a059; letter-spacing: 2px;">SISTEMA V</h2>
+            <input type="text" id="username" placeholder="Nome do Personagem">
+            <button onclick="login()" class="btn-click-anim" style="width:100%; padding:12px; background:#c5a059; border:none; font-weight:bold; cursor:pointer;">ENTRAR</button>
+        </div>
+    </div>
+
+    <div id="main-content">
+        <div class="topbar"><h1>KAGURABACHI</h1></div>
+
+        <div class="menu" id="main-menu">
+            <button class="btn-click-anim" onclick="showScreen('ficha-screen')">Minha Ficha</button>
+            <button class="btn-click-anim" onclick="showScreen('skill-screen')">Skill Tree Geral</button>
+            <button class="btn-click-anim" onclick="showScreen('espadas-screen')">Espadas Mágicas</button>
+            <button class="btn-click-anim" onclick="showScreen('feiticos-screen')">Técnicas Proibidas</button>
+        </div>
+
+        <div class="screen" id="ficha-screen">
+            <button class="back-btn btn-click-anim" onclick="goHome()">Voltar</button>
+            <div class="status-container">
+                <h2 id="char-name" style="color: #c5a059; text-align: center; margin-bottom: 20px;">-</h2>
+                <div style="display: flex; justify-content: space-between;"><span>SANGUE (PV)</span><span><input type="number" id="hp-cur" style="width:45px; background:none; border:none; color:white; text-align:right" onchange="sync()"> / <input type="number" id="hp-max" style="width:45px; background:none; border:none; color:white;" onchange="sync()"></span></div>
+                <div class="bar-outer"><div id="hp-bar" class="bar-inner"></div></div>
+                <div style="display: flex; justify-content: space-between;"><span>GENRYOKU</span><span><input type="number" id="en-cur" style="width:45px; background:none; border:none; color:white; text-align:right" onchange="sync()"> / <input type="number" id="en-max" style="width:45px; background:none; border:none; color:white;" onchange="sync()"></span></div>
+                <div class="bar-outer"><div id="en-bar" class="bar-inner"></div></div>
+                <div style="text-align: center; margin: 20px 0; padding: 10px; border: 1px dashed #c5a059;">PONTOS: <strong id="pts-val" style="color:#c5a059; font-size: 22px;">0</strong> <button class="btn-mod btn-click-anim" onclick="addPt(1)">+</button> <button class="btn-mod btn-click-anim" onclick="addPt(-1)">-</button></div>
+                <div id="stats-area"></div>
+            </div>
+        </div>
+
+        <div class="screen" id="skill-screen">
+            <button class="back-btn btn-click-anim" onclick="goHome()">Voltar</button>
+            <div class="tree-container">
+                <div class="skill" id="gen-1" style="left: 10%; top: 40%;" onclick="openSkill('Iai Purity White Style', 'Primeiros Movimentos do Estilo. +1 AGL.', 5, 'gen-1')"><img src="https://i.imgur.com/DPSpBF8.jpeg"></div>
+                <div class="skill" id="gen-2" style="left: 30%; top: 40%;" onclick="openSkill('Postura Iai', 'O usuário entra na postura do Iai.', 5, 'gen-2')"><img src="https://i.imgur.com/tPeuJ5K.jpeg"></div>
+                <div class="skill" id="gen-3" style="left: 50%; top: 40%;" onclick="openSkill('Marca da Pureza', 'Adiciona Marcas ao inimigo.', 5, 'gen-3')"><img src="https://i.imgur.com/t3GZ8aN.jpeg"></div>
+                <div class="skill" id="gen-4" style="left: 70%; top: 40%;" onclick="openSkill('Passo Nevado', 'O Usuário some por um momento no campo de batalha.', 3, 'gen-4')"><img src="https://i.imgur.com/t3GZ8aN.jpeg"></div>
+                <div class="skill" id="gen-5" style="left: 90%; top: 40%;" onclick="openSkill('Pureza Branca', 'Sua espada é sacada perfeitamente.', 5, 'gen-5')"><img src="https://i.imgur.com/DPSpBF8.jpeg"></div>
+            </div>
+        </div>
+
+        <div class="screen" id="espadas-screen">
+            <button class="back-btn btn-click-anim" onclick="goHome()">Voltar</button>
+            <div class="big-card-grid">
+                <div class="big-card btn-click-anim" onclick="showScreen('tobi-tree')">
+                    <img src="https://preview.redd.it/tobimune-doesnt-suit-samura-at-all-v0-zitrdoek0lpe1.jpeg?auto=webp&s=67d95018b69d850799eb809780a41b98059f7b81">
+                    <h2>TOBIMUNE</h2>
+                </div>
+                <div class="big-card btn-click-anim" onclick="showScreen('kure-tree')">
+                    <img src="https://preview.redd.it/is-it-possible-for-kuregumo-to-come-back-no-really-hear-me-v0-cmq5tj0ffeye1.jpeg?auto=webp&s=aac22a4a34b70f9cb87cb41c9b7ee0342777561c">
+                    <h2>KUREGUMO</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="screen" id="tobi-tree">
+            <button class="back-btn btn-click-anim" onclick="showScreen('espadas-screen')">Voltar</button>
+            <div class="tree-container">
+                <div class="skill" id="tobi-1" style="left: 20%; top: 40%;" onclick="openSkill('Crow', 'PASSIVA: Teleporte entre rastros de penas em seguida de um corte.', 3, 'tobi-1')"><img src="https://static.wikia.nocookie.net/kagurabachi/images/5/53/Samura_Crow.png"></div>
+                <div class="skill" id="tobi-2" style="left: 50%; top: 40%;" onclick="openSkill('Owl', 'Invoca olhos que detectam Genryoku.', 4, 'tobi-2')"><img src="https://static.wikia.nocookie.net/kagurabachi/images/e/e6/Samura_Owl.png"></div>
+                <div class="skill" id="tobi-3" style="left: 80%; top: 40%;" onclick="openSkill('Suzaku', 'Fogo pela lâmina que cura e ataca.', 8, 'tobi-3')"><img src="https://static.wikia.nocookie.net/kagurabachi/images/e/ea/Black_flames_of_Suzaku.png"></div>
+            </div>
+        </div>
+
+        <div class="screen" id="kure-tree">
+            <button class="back-btn btn-click-anim" onclick="showScreen('espadas-screen')">Voltar</button>
+            <div class="tree-container">
+                <div class="skill" id="kg-1" style="left: 20%; top: 40%;" onclick="openSkill('Yui', 'O alvo invoca um pequeno dragão de nuvem que dispara projéteis e gelo.', 5, 'kg-1')"><img src="https://static.wikia.nocookie.net/kagurabachi/images/1/1e/Chihiro_Yui.png"></div>
+                <div class="skill" id="kg-2" style="left: 50%; top: 40%;" onclick="openSkill('Kou', 'Disparo de vapor. Aplica -1 dado de agilidade ao inimigo atingido.', 6, 'kg-2')"><img src="https://static.wikia.nocookie.net/kagurabachi/images/3/39/Sojo_uses_Kou.png"></div>
+                <div class="skill" id="kg-3" style="left: 80%; top: 40%;" onclick="openSkill('Mei', 'Dispara raios pela ponta da espada através dos dragões de nuvem.', 10, 'kg-3')"><img src="https://static.wikia.nocookie.net/kagurabachi/images/d/d1/Chihiro_Mei_Blast.png"></div>
+            </div>
+        </div>
+
+        <div class="screen" id="feiticos-screen">
+            <button class="back-btn btn-click-anim" onclick="goHome()">Voltar</button>
+            <div class="big-card-grid">
+                <div class="big-card btn-click-anim" onclick="showScreen('space-tree')">
+                    <img src="https://static.wikia.nocookie.net/jujutsu-kaisen/images/d/d7/Takako_Uro_controlling_the_sky.png">
+                    <h2>ESPAÇO</h2>
+                </div>
+                <div class="big-card btn-click-anim" onclick="showScreen('blood-tree')">
+                    <img src="https://i.pinimg.com/736x/4d/49/d9/4d49d9f37de08c23f9d278f42526f3e9.jpg">
+                    <h2>SANGUE</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="screen" id="space-tree">
+            <button class="back-btn btn-click-anim" onclick="showScreen('feiticos-screen')">Voltar</button>
+            <div class="tree-container">
+                <div class="skill" id="sp-1" style="left: 20%; top: 20%;" onclick="openSkill('Teleporte', 'Salto espacial instantâneo.', 5, 'sp-1')"><img src="https://media1.tenor.com/m/biqIHP4-IkIAAAAC/yuta-uro.gif"></div>
+                <div class="skill" id="sp-2" style="left: 50%; top: 20%;" onclick="openSkill('Dobra', 'Distorção ofensiva/defensiva do espaço.', 7, 'sp-2')"><img src="https://media1.tenor.com/m/6UJhbSUp6kUAAAAd/uro-takako-uro.gif"></div>
+                <div class="skill" id="sp-3" style="left: 80%; top: 20%;" onclick="openSkill('Repulsão', 'Pressão de vácuo.', 8, 'sp-3')"><img src="https://media1.tenor.com/m/IPUpF8qSJzEAAAAC/takako-uro.gif"></div>
+                <div class="skill" id="sp-4" style="left: 35%; top: 60%;" onclick="openSkill('Flutuar', 'Gravidade alterada.', 10, 'sp-4')"><img src="https://media1.tenor.com/m/cckRZdARE0MAAAAC/uro-takako-uro.gif"></div>
+                <div class="skill" id="sp-5" style="left: 65%; top: 60%;" onclick="openSkill('Quebra Gelo Fino', 'Consiste em atacar a superfice do espaço.', 15, 'sp-5')"><img src="https://static.wikia.nocookie.net/jujutsu-kaisen/images/c/c7/Thin_Ice_Breaker_%28Anime%29.gif"></div>
+            </div>
+        </div>
+
+        <div class="screen" id="blood-tree">
+            <button class="back-btn btn-click-anim" onclick="showScreen('feiticos-screen')">Voltar</button>
+            <div class="tree-container">
+                <div class="skill" id="bl-1" style="left: 20%; top: 20%;" onclick="openSkill('Convergência', 'Uma técnica que comprime e condensa o sangue do usuário ao limite.', 5, 'bl-1')">
+                    <img src="https://static.wikia.nocookie.net/jujutsukaisen/images/2/26/Choso_usa_Converg%C3%AAncia_%28Anime%29.gif/revision/latest?cb=20240801021940&path-prefix=pt-br">
+                </div>
+                <div class="skill" id="bl-2" style="left: 50%; top: 20%;" onclick="openSkill('Sangue Perfurante', 'Dispara o sangue condensado por um ponto único em alta velocidade.', 6, 'bl-2')">
+                    <img src="https://static.wikia.nocookie.net/jujutsukaisen/images/5/55/Sangue_Perfurante_%28Anime%29.gif/revision/latest?cb=20240617173838&path-prefix=pt-br">
+                </div>
+                <div class="skill" id="bl-3" style="left: 80%; top: 20%;" onclick="openSkill('Lâmina de Sangue', 'O usuário forma seu sangue em uma adaga afiada.', 5, 'bl-3')">
+                    <img src="https://static.wikia.nocookie.net/jujutsukaisen/images/b/b3/L%C3%A2mina_de_Sangue_%28Anime%29.gif/revision/latest?cb=20240701020129&path-prefix=pt-br">
+                </div>
+                <div class="skill" id="bl-4" style="left: 35%; top: 60%;" onclick="openSkill('Supernova', 'Libera o sangue condensado em disparos multidirecionais.', 10, 'bl-4')">
+                    <img src="https://static.wikia.nocookie.net/jujutsukaisen/images/7/70/Choso_usando_Supernova_em_Yuji_%28Anime%29.gif/revision/latest/scale-to-width-down/220?cb=20240701020126&path-prefix=pt-br">
+                </div>
+                <div class="skill" id="bl-5" style="left: 65%; top: 60%;" onclick="openSkill('Desmantelar', 'Kai.', 13, 'bl-5')">
+                    <img src="https://static.wikia.nocookie.net/jujutsukaisen/images/d/d6/Sukuna_usa_Desmantelar_em_Mahoraga_%28Anime%29.gif/revision/latest?cb=20240708002345&path-prefix=pt-br">
+                </div>
+            </div>
+        </div>
+
+        <div id="skill-desc">
+            <h3 id="sk-nome" style="color:#c5a059">Skill</h3>
+            <p id="sk-texto" style="margin:15px 0; font-size:14px; line-height:1.4"></p>
+            <p>Custo: <span id="sk-custo" style="color:#c5a059">0</span> pts</p>
+            <div style="margin-top:20px">
+                <button onclick="buySkill()" class="btn-click-anim" style="padding:10px 25px; background:#c5a059; border:none; cursor:pointer; font-weight:bold">DESBLOQUEAR</button>
+                <button onclick="document.getElementById('skill-desc').style.display='none'" style="padding:10px 25px; background:#333; color:white; border:none; margin-left:10px; cursor:pointer">VOLTAR</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let data = { nome: "", pts: 15, hp: 50, hpM: 50, en: 40, enM: 40, stats: { "Força": 0, "Destreza": 0, "Intelecto": 0, "Genryoku": 0, "Presença": 0 }, bought: [] };
+        let curSk = null;
+
+        function login() {
+            const n = document.getElementById('username').value;
+            if(!n) return;
+            data.nome = n;
+            const saved = localStorage.getItem('kb_final_'+n);
+            if(saved) data = JSON.parse(saved);
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('main-content').style.display = 'block';
+            document.getElementById('lore-box').style.display = 'block';
+            renderStats(); sync();
+        }
+
+        function renderStats() {
+            const area = document.getElementById('stats-area');
+            area.innerHTML = "";
+            for(let s in data.stats) {
+                area.innerHTML += `<div class="stat-row"><span>${s}</span><div><button class="btn-mod btn-click-anim" onclick="modStat('${s}',-1)">-</button><strong style="margin:0 15px">${data.stats[s]}</strong><button class="btn-mod btn-click-anim" onclick="modStat('${s}',1)">+</button></div></div>`;
+            }
+        }
+
+        function modStat(s, v) {
+            if(v > 0 && data.pts > 0) { data.stats[s]++; data.pts--; }
+            else if(v < 0 && data.stats[s] > 0) { data.stats[s]--; data.pts++; }
+            save(); renderStats(); updateUI();
+        }
+
+        function sync() {
+            data.hp = parseInt(document.getElementById('hp-cur').value) || 0;
+            data.hpM = parseInt(document.getElementById('hp-max').value) || 1;
+            data.en = parseInt(document.getElementById('en-cur').value) || 0;
+            data.enM = parseInt(document.getElementById('en-max').value) || 1;
+            updateUI(); save();
+        }
+
+        function updateUI() {
+            document.getElementById('char-name').innerText = data.nome.toUpperCase();
+            document.getElementById('hp-cur').value = data.hp;
+            document.getElementById('hp-max').value = data.hpM;
+            document.getElementById('hp-bar').style.width = (data.hp / data.hpM * 100) + "%";
+            document.getElementById('en-cur').value = data.en;
+            document.getElementById('en-max').value = data.enM;
+            document.getElementById('en-bar').style.width = (data.en / data.enM * 100) + "%";
+            document.getElementById('pts-val').innerText = data.pts;
+            document.querySelectorAll('.skill').forEach(el => {
+                if(data.bought.includes(el.id)) el.classList.add('bought');
+            });
+        }
+
+        function addPt(v) { data.pts = Math.max(0, data.pts + v); updateUI(); save(); }
+
+        function showScreen(id) {
+            document.getElementById('main-menu').style.display = 'none';
+            document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
+            document.getElementById(id).style.display = 'block';
+            setTimeout(() => drawLinesInContainer(id), 50);
+        }
+
+        function goHome() {
+            document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
+            document.getElementById('main-menu').style.display = 'flex';
+        }
+
+        function openSkill(n, t, c, id) {
+            if(data.bought.includes(id)) return;
+            curSk = {n, t, c, id};
+            document.getElementById('sk-nome').innerText = n;
+            document.getElementById('sk-texto').innerText = t;
+            document.getElementById('sk-custo').innerText = c;
+            document.getElementById('skill-desc').style.display = 'block';
+        }
+
+        function buySkill() {
+            if(data.pts >= curSk.c) {
+                data.pts -= curSk.c;
+                data.bought.push(curSk.id);
+                document.getElementById('skill-desc').style.display = 'none';
+                updateUI(); save();
+            }
+        }
+
+        function save() { localStorage.setItem('kb_final_'+data.nome, JSON.stringify(data)); }
+
+        function drawLinesInContainer(containerId) {
+            const container = document.querySelector(`#${containerId} .tree-container`);
+            if(!container) return;
+            container.querySelectorAll('.skill-line').forEach(l => l.remove());
+            const connections = [
+                ['gen-1','gen-2'],['gen-2','gen-3'],['gen-3','gen-4'],['gen-4','gen-5'],
+                ['tobi-1','tobi-2'],['tobi-2','tobi-3'],
+                ['kg-1','kg-2'],['kg-2','kg-3'],
+                ['bl-1','bl-2'],['bl-2','bl-3'],['bl-2','bl-4'],['bl-4','bl-5'],
+                ['sp-1','sp-2'],['sp-2','sp-3'],['sp-2','sp-4'],['sp-4','sp-5']
+            ];
+            connections.forEach(pair => {
+                const a = document.getElementById(pair[0]);
+                const b = document.getElementById(pair[1]);
+                if(a && b && a.offsetParent && b.offsetParent) {
+                    const x1 = a.offsetLeft + 40, y1 = a.offsetTop + 40;
+                    const x2 = b.offsetLeft + 40, y2 = b.offsetTop + 40;
+                    const d = Math.sqrt((x2-x1)**2 + (y2-y1)**2);
+                    const ang = Math.atan2(y2-y1, x2-x1) * 180 / Math.PI;
+                    const line = document.createElement('div');
+                    line.className = 'skill-line';
+                    line.style.width = d + 'px'; line.style.left = x1 + 'px'; line.style.top = y1 + 'px';
+                    line.style.transform = `rotate(${ang}deg)`;
+                    container.appendChild(line);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
